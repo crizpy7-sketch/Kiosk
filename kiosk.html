@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Photobooth</title>
+<style>
+  :root{
+    color-scheme: dark; /* this kiosk is intentionally always-dark, not tied to system light/dark */
+    --bg:#12100E;
+    --bg-elev:#1C1815;
+    --bg-elev-2:#28221D;
+    --text:#F5EFE8;
+    --text-dim:#A89C8E;
+    --accent:#FF6B4A;
+    --accent-dim:#B84B32;
+    --danger:#E5484D;
+    --success:#3FB27F;
+    --radius-lg:28px;
+    --radius-md:16px;
+    --radius-pill:999px;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{
+    margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    overscroll-behavior:none; user-select:none; -webkit-user-select:none;
+  }
+  #app{
+    position:fixed; inset:0; min-height:100dvh; display:flex; flex-direction:column;
+    padding-top:var(--safe-t); padding-bottom:var(--safe-b);
+    background:var(--bg); overflow:hidden;
+  }
+  .screen{
+    position:absolute; inset:0; display:none; flex-direction:column; align-items:center;
+    justify-content:center; padding:32px; text-align:center; gap:20px;
+  }
+  .screen.active{ display:flex; }
+  h1{ font-size:clamp(28px,5vw,48px); margin:0; font-weight:700; letter-spacing:-0.02em; }
+  p{ color:var(--text-dim); font-size:clamp(15px,2.2vw,19px); line-height:1.5; max-width:520px; margin:0; }
+  .btn{
+    appearance:none; border:none; cursor:pointer; font-weight:600; font-size:18px;
+    padding:18px 36px; border-radius:var(--radius-pill); min-height:56px; min-width:56px;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn:active{ transform:scale(0.96); }
+  .btn-primary{ background:var(--accent); color:#1A0D08; }
+  .btn-ghost{ background:var(--bg-elev-2); color:var(--text); }
+  .btn-lg{ padding:24px 48px; font-size:22px; }
+  .btn-row{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .logo-tap{ position:absolute; top:calc(var(--safe-t) + 10px); left:10px; width:64px; height:64px; z-index:50; }
+
+  /* Idle */
+  #screen-idle{ background:radial-gradient(circle at 50% 30%, var(--bg-elev) 0%, var(--bg) 70%); }
+  .pulse{ width:120px; height:120px; border-radius:50%; background:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:44px;
+    animation:pulse 2.2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:1;} 50%{ transform:scale(1.08); opacity:.85;} }
+
+  /* Theme grid */
+  .theme-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:16px; width:100%; max-width:760px; }
+  .theme-card{ background:var(--bg-elev); border:2px solid transparent; border-radius:var(--radius-lg);
+    padding:22px 16px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .theme-card:active{ transform:scale(0.97); }
+  .theme-card.selected{ border-color:var(--accent); }
+  .theme-emoji{ font-size:40px; }
+  .theme-label{ font-weight:600; font-size:16px; }
+
+  /* Capture */
+  #screen-capture{ padding:0; }
+  #video-output{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
+  .capture-overlay{ position:relative; z-index:5; display:flex; flex-direction:column;
+    justify-content:space-between; height:100%; width:100%; padding:24px; padding-top:calc(var(--safe-t) + 24px);
+    padding-bottom:calc(var(--safe-b) + 24px); pointer-events:none; }
+  .countdown-num{ font-size:120px; font-weight:800; text-shadow:0 4px 24px rgba(0,0,0,.6); align-self:center; margin:auto; }
+  .capture-status{ align-self:center; background:rgba(18,16,14,.7); backdrop-filter:blur(6px);
+    padding:10px 22px; border-radius:var(--radius-pill); font-size:15px; }
+
+  /* Review */
+  .review-media{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  .review-media img, .review-media video{ max-width:260px; max-height:340px; border-radius:var(--radius-md);
+    border:2px solid var(--bg-elev-2); object-fit:cover; }
+
+  /* Delivery */
+  #qr-holder{ background:#fff; padding:16px; border-radius:var(--radius-md); }
+
+  /* Consent */
+  .consent-box{ background:var(--bg-elev); border-radius:var(--radius-lg); padding:28px;
+    max-width:560px; text-align:left; }
+  .consent-box p{ text-align:left; }
+
+  /* Setup */
+  #screen-setup{ align-items:stretch; text-align:left; overflow-y:auto; }
+  .setup-form{ width:100%; max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:14px; text-align:left; }
+  .setup-form label{ font-size:13px; color:var(--text-dim); font-weight:600; }
+  .setup-form input, .setup-form textarea{
+    width:100%; background:var(--bg-elev); border:1px solid var(--bg-elev-2); color:var(--text);
+    border-radius:var(--radius-md); padding:12px 14px; font-size:16px; font-family:inherit;
+  }
+  .theme-row{ display:flex; gap:8px; }
+  .theme-row input{ flex:1; }
+
+  .badge{ font-size:13px; color:var(--text-dim); }
+  .danger-text{ color:var(--danger); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- hidden long-press target for admin/setup access -->
+  <div class="logo-tap" id="admin-gesture" aria-hidden="true"></div>
+
+  <!-- IDLE / ATTRACT -->
+  <section class="screen active" id="screen-idle">
+    <div class="pulse">📸</div>
+    <h1 id="idle-title">Tap to Begin</h1>
+    <p id="idle-sub">Step up and become someone else for a photo.</p>
+    <button class="btn btn-primary btn-lg" data-go="consent">Start</button>
+  </section>
+
+  <!-- SETUP (no config yet, or admin) -->
+  <section class="screen" id="screen-setup">
+    <h1>Kiosk Setup</h1>
+    <p>This runs once per event. Fill this in, save, then hand it off to guests.</p>
+    <div class="setup-form">
+      <div>
+        <label>Event name (shown on idle screen)</label>
+        <input id="cfg-event" placeholder="e.g. Sarah &amp; Mike's Wedding" />
+      </div>
+      <div>
+        <label>Edge Function base URL (see the deploy notes with this build)</label>
+        <input id="cfg-fn" placeholder="https://YOUR-PROJECT.functions.supabase.co/photobooth" />
+      </div>
+      <div>
+        <label>Themes — label, then the Decart prompt (one per line, "label | prompt")</label>
+        <textarea id="cfg-themes" rows="7" placeholder="Studio Glam | cinematic studio photoshoot lighting, glossy magazine look, keep the person's face and identity exactly the same"></textarea>
+      </div>
+      <div>
+        <label>Admin PIN (4+ digits — you'll need this to reopen Setup later)</label>
+        <input id="cfg-pin" inputmode="numeric" placeholder="e.g. 4821" />
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-save-config">Save &amp; Return to Idle</button>
+        <button class="btn btn-ghost" id="btn-close-setup">Cancel</button>
+      </div>
+      <p class="badge">Config is stored on this iPad only (localStorage), not in the app file.</p>
+    </div>
+  </section>
+
+  <!-- ADMIN PIN GATE -->
+  <section class="screen" id="screen-pin">
+    <h1>Admin PIN</h1>
+    <p>Enter the PIN to reopen Setup.</p>
+    <input id="pin-input" inputmode="numeric" type="password"
+      style="max-width:220px; text-align:center; font-size:26px; letter-spacing:10px;" />
+    <p id="pin-error" class="danger-text" style="display:none;">Wrong PIN.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" id="btn-pin-submit">Unlock</button>
+      <button class="btn btn-ghost" data-go="idle">Cancel</button>
+    </div>
+  </section>
+
+  <!-- CONSENT -->
+  <section class="screen" id="screen-consent">
+    <h1>Before we start</h1>
+    <div class="consent-box">
+      <p>This photobooth captures your photo and a short video, and uses AI to transform them into a new image/clip. Your capture is processed to generate your result and is not kept longer than needed to deliver it to you.</p>
+      <p>By tapping <strong>I Agree, Start</strong> you consent to this capture and processing.</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" data-go="theme">I Agree, Start</button>
+      <button class="btn btn-ghost" data-go="idle">No Thanks</button>
+    </div>
+  </section>
+
+  <!-- THEME PICK -->
+  <section class="screen" id="screen-theme">
+    <h1>Pick your look</h1>
+    <div class="theme-grid" id="theme-grid"></div>
+  </section>
+
+  <!-- CAPTURE (live camera + transform) -->
+  <section class="screen" id="screen-capture">
+    <video id="video-output" autoplay playsinline muted></video>
+    <div class="capture-overlay">
+      <div class="capture-status" id="capture-status">Connecting…</div>
+      <div class="countdown-num" id="countdown-num"></div>
+      <div class="btn-row" id="capture-actions" style="pointer-events:auto; display:none;">
+        <button class="btn btn-primary btn-lg" id="btn-take">Take Photo</button>
+        <button class="btn btn-ghost" data-go="idle">Cancel</button>
+      </div>
+    </div>
+    <canvas id="capture-canvas" style="display:none;"></canvas>
+  </section>
+
+  <!-- REVIEW -->
+  <section class="screen" id="screen-review">
+    <h1>How's this?</h1>
+    <div class="review-media">
+      <img id="review-photo" alt="your photo" />
+      <video id="review-video" controls playsinline muted></video>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" id="btn-accept">Love It</button>
+      <button class="btn btn-ghost" id="btn-retry">Try Again</button>
+    </div>
+  </section>
+
+  <!-- DELIVERY -->
+  <section class="screen" id="screen-delivery">
+    <h1>You're all set!</h1>
+    <p>Scan the code to save your photo and video to your phone.</p>
+    <div id="qr-holder"></div>
+    <button class="btn btn-primary" data-go="idle">Done</button>
+  </section>
+
+  <!-- ERROR -->
+  <section class="screen" id="screen-error">
+    <h1 class="danger-text">Something went wrong</h1>
+    <p id="error-msg">We couldn't complete that.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-error-retry">Try Again</button>
+      <button class="btn btn-ghost" data-go="idle">Back to Start</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<script type="module">
+import { createDecartClient, models } from "https://esm.sh/@decartai/sdk";
+
+/* ---------- config ---------- */
+const CONFIG_KEY = "photobooth_config_v1";
+let CONFIG = null;
+
+function loadConfig(){
+  try{
+    const raw = localStorage.getItem(CONFIG_KEY);
+    CONFIG = raw ? JSON.parse(raw) : null;
+  }catch(e){ CONFIG = null; }
+  return CONFIG;
+}
+function saveConfig(cfg){
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+  CONFIG = cfg;
+}
+function configIsComplete(cfg){
+  return !!(cfg && cfg.edgeFunctionUrl && cfg.themes && cfg.themes.length);
+}
+
+/* ---------- screen management ---------- */
+const screens = {};
+document.querySelectorAll(".screen").forEach(el => screens[el.id.replace("screen-","")] = el);
+let currentScreen = "idle";
+let idleTimer = null, sessionTimer = null;
+
+function showScreen(name){
+  Object.values(screens).forEach(s => s.classList.remove("active"));
+  screens[name].classList.add("active");
+  currentScreen = name;
+  resetIdleTimer();
+}
+
+function resetIdleTimer(){
+  clearTimeout(idleTimer);
+  if(currentScreen === "idle" || currentScreen === "setup") return;
+  const ms = (CONFIG && CONFIG.idleTimeoutMs) || 60000;
+  idleTimer = setTimeout(() => goIdle(), ms);
+}
+
+function goIdle(){
+  clearTimeout(sessionTimer);
+  teardownCapture();
+  session.retryUsed = false;
+  session.theme = null;
+  session.photoBlob = null;
+  session.videoBlob = null;
+  showScreen("idle");
+}
+
+document.querySelectorAll("[data-go]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const target = btn.getAttribute("data-go");
+    if(target === "idle") return goIdle();
+    if(target === "theme") return renderThemeScreen();
+    showScreen(target);
+  });
+});
+
+document.addEventListener("pointerdown", resetIdleTimer, { passive:true });
+
+/* ---------- long-press admin access ---------- */
+let pressTimer = null;
+const gestureEl = document.getElementById("admin-gesture");
+gestureEl.addEventListener("pointerdown", () => {
+  pressTimer = setTimeout(() => requestAdminAccess(), 2500);
+});
+["pointerup","pointerleave","pointercancel"].forEach(evt =>
+  gestureEl.addEventListener(evt, () => clearTimeout(pressTimer))
+);
+
+function requestAdminAccess(){
+  if(CONFIG && CONFIG.adminPin){
+    document.getElementById("pin-input").value = "";
+    document.getElementById("pin-error").style.display = "none";
+    showScreen("pin");
+  } else {
+    openSetup(); // no PIN set yet — first-run bootstrap case
+  }
+}
+
+document.getElementById("btn-pin-submit").addEventListener("click", () => {
+  const entered = document.getElementById("pin-input").value.trim();
+  if(entered && CONFIG && entered === CONFIG.adminPin){
+    openSetup();
+  } else {
+    document.getElementById("pin-error").style.display = "block";
+    document.getElementById("pin-input").value = "";
+  }
+});
+
+function openSetup(){
+  const cfg = CONFIG || {};
+  document.getElementById("cfg-event").value = cfg.eventName || "";
+  document.getElementById("cfg-fn").value = cfg.edgeFunctionUrl || "";
+  document.getElementById("cfg-pin").value = cfg.adminPin || "";
+  document.getElementById("cfg-themes").value = (cfg.themes || [])
+    .map(t => `${t.label} | ${t.prompt}`).join("\n");
+  showScreen("setup");
+}
+
+document.getElementById("btn-close-setup").addEventListener("click", () => {
+  if(configIsComplete(CONFIG)) goIdle();
+});
+
+document.getElementById("btn-save-config").addEventListener("click", () => {
+  const themes = document.getElementById("cfg-themes").value.split("\n")
+    .map(l => l.trim()).filter(Boolean)
+    .map((line, i) => {
+      const [label, ...rest] = line.split("|");
+      return { id: "theme_" + i, label: (label||"").trim(), emoji: THEME_EMOJIS[i % THEME_EMOJIS.length],
+               prompt: rest.join("|").trim() };
+    });
+  const cfg = {
+    eventName: document.getElementById("cfg-event").value.trim(),
+    edgeFunctionUrl: document.getElementById("cfg-fn").value.trim().replace(/\/$/,""),
+    adminPin: document.getElementById("cfg-pin").value.trim(),
+    themes,
+    idleTimeoutMs: 60000,
+    sessionTimeoutMs: 120000
+  };
+  saveConfig(cfg);
+  document.getElementById("idle-title").textContent = "Tap to Begin";
+  document.getElementById("idle-sub").textContent = cfg.eventName
+    ? `${cfg.eventName} — step up and become someone else.`
+    : "Step up and become someone else for a photo.";
+  goIdle();
+});
+
+const THEME_EMOJIS = ["✨","🌆","🎅","🦸","🎬","🪩","👑","🌟"];
+
+/* ---------- theme screen ---------- */
+function renderThemeScreen(){
+  const grid = document.getElementById("theme-grid");
+  grid.innerHTML = "";
+  (CONFIG.themes || []).forEach(theme => {
+    const card = document.createElement("div");
+    card.className = "theme-card";
+    card.innerHTML = `<div class="theme-emoji">${theme.emoji||"✨"}</div><div class="theme-label">${theme.label}</div>`;
+    card.addEventListener("click", () => {
+      session.theme = theme;
+      showScreen("capture");
+      startCapture(theme);
+    });
+    grid.appendChild(card);
+  });
+  showScreen("theme");
+}
+
+/* ---------- session state ---------- */
+const session = { theme:null, stream:null, editedStream:null, realtimeClient:null,
+  recorder:null, chunks:[], photoBlob:null, videoBlob:null, retryUsed:false };
+
+const videoEl = document.getElementById("video-output");
+const statusEl = document.getElementById("capture-status");
+const countdownEl = document.getElementById("countdown-num");
+const actionsEl = document.getElementById("capture-actions");
+
+function setStatus(msg){ statusEl.textContent = msg; }
+
+async function fetchDecartToken(){
+  const res = await fetch(CONFIG.edgeFunctionUrl + "/token", { method:"POST" });
+  if(!res.ok) throw new Error("Could not reach the photobooth service.");
+  const data = await res.json();
+  if(!data.token) throw new Error("No token returned.");
+  return data.token;
+}
+
+async function startCapture(theme){
+  actionsEl.style.display = "none";
+  countdownEl.textContent = "";
+  setStatus("Connecting…");
+  clearTimeout(sessionTimer);
+  sessionTimer = setTimeout(() => showError("That took too long — let's try again."), CONFIG.sessionTimeoutMs || 120000);
+
+  try{
+    session.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:"user", width:{ideal:1280}, height:{ideal:720} },
+      audio: false
+    });
+  }catch(e){
+    return showError("We need camera access to continue. Check the iPad's camera permission for this app.");
+  }
+
+  try{
+    const token = await fetchDecartToken();
+    const client = createDecartClient({ apiKey: token });
+    const model = models.realtime("lucy-2.5");
+    session.realtimeClient = await client.realtime.connect(session.stream, {
+      model,
+      mirror: "auto",
+      initialState: { prompt: { text: theme.prompt } },
+      onRemoteStream: (editedStream) => {
+        session.editedStream = editedStream;
+        videoEl.srcObject = editedStream;
+        setStatus("");
+        actionsEl.style.display = "flex";
+        runCountdown();
+      }
+    });
+  }catch(e){
+    return showError("Couldn't connect to the AI service. Check the WiFi connection.");
+  }
+}
+
+let countdownTick = null;
+
+function runCountdown(){
+  let n = 3;
+  countdownEl.textContent = n;
+  countdownTick = setInterval(() => {
+    n -= 1;
+    if(n <= 0){
+      clearInterval(countdownTick);
+      countdownEl.textContent = "";
+      capturePhotoAndClip();
+    } else {
+      countdownEl.textContent = n;
+    }
+  }, 1000);
+}
+
+document.getElementById("btn-take").addEventListener("click", () => {
+  if(!session.editedStream) return; // not connected yet, nothing to capture
+  clearInterval(countdownTick);
+  countdownEl.textContent = "";
+  actionsEl.style.display = "none";
+  capturePhotoAndClip();
+});
+
+function pickMimeType(){
+  const options = ["video/mp4", "video/webm;codecs=vp9", "video/webm"];
+  for(const t of options){
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return "";
+}
+
+function capturePhotoAndClip(){
+  actionsEl.style.display = "none"; // prevent a second tap from starting a second recorder mid-clip
+  // still frame
+  const canvas = document.getElementById("capture-canvas");
+  canvas.width = videoEl.videoWidth || 1280;
+  canvas.height = videoEl.videoHeight || 720;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob(blob => { session.photoBlob = blob; }, "image/jpeg", 0.92);
+
+  // short clip from the transformed stream
+  session.chunks = [];
+  const mimeType = pickMimeType();
+  try{
+    session.recorder = mimeType
+      ? new MediaRecorder(session.editedStream, { mimeType })
+      : new MediaRecorder(session.editedStream);
+  }catch(e){
+    return finishSession(); // still deliver the photo even if clip recording fails
+  }
+  session.recorder.ondataavailable = e => { if(e.data.size) session.chunks.push(e.data); };
+  session.recorder.onstop = () => {
+    session.videoBlob = new Blob(session.chunks, { type: mimeType || "video/webm" });
+    finishSession();
+  };
+  session.recorder.start();
+  setTimeout(() => { if(session.recorder.state === "recording") session.recorder.stop(); }, 4000);
+}
+
+function finishSession(){
+  teardownCapture();
+  document.getElementById("review-photo").src = URL.createObjectURL(session.photoBlob);
+  if(session.videoBlob){
+    document.getElementById("review-video").src = URL.createObjectURL(session.videoBlob);
+  }
+  showScreen("review");
+}
+
+function teardownCapture(){
+  clearTimeout(sessionTimer);
+  if(session.realtimeClient){ try{ session.realtimeClient.disconnect(); }catch(e){} }
+  if(session.stream){ session.stream.getTracks().forEach(t => t.stop()); }
+  session.realtimeClient = null; session.stream = null; session.editedStream = null;
+  videoEl.srcObject = null;
+}
+
+document.getElementById("btn-retry").addEventListener("click", () => {
+  if(session.retryUsed){ return goIdle(); }
+  session.retryUsed = true;
+  showScreen("capture");
+  startCapture(session.theme);
+});
+
+document.getElementById("btn-accept").addEventListener("click", async () => {
+  showScreen("delivery");
+  document.getElementById("qr-holder").innerHTML = "";
+  try{
+    const url = await uploadResult(session.photoBlob, session.videoBlob);
+    new QRCode(document.getElementById("qr-holder"), { text:url, width:220, height:220 });
+  }catch(e){
+    showError("Couldn't prepare your download link. Ask the host to check the connection.");
+  }
+});
+
+async function uploadResult(photoBlob, videoBlob){
+  const form = new FormData();
+  form.append("photo", photoBlob, "photo.jpg");
+  if(videoBlob) form.append("video", videoBlob, "clip.webm");
+  const res = await fetch(CONFIG.edgeFunctionUrl + "/upload", { method:"POST", body:form });
+  if(!res.ok) throw new Error("upload failed");
+  const data = await res.json();
+  if(!data.url) throw new Error("no url returned");
+  return data.url;
+}
+
+/* ---------- errors ---------- */
+function showError(msg){
+  teardownCapture();
+  document.getElementById("error-msg").textContent = msg;
+  showScreen("error");
+}
+document.getElementById("btn-error-retry").addEventListener("click", () => {
+  if(session.theme){ showScreen("capture"); startCapture(session.theme); }
+  else { goIdle(); }
+});
+
+/* ---------- init ---------- */
+(function init(){
+  loadConfig();
+  if(!configIsComplete(CONFIG)){
+    openSetup();
+  } else {
+    document.getElementById("idle-sub").textContent = CONFIG.eventName
+      ? `${CONFIG.eventName} — step up and become someone else.`
+      : "Step up and become someone else for a photo.";
+    showScreen("idle");
+  }
+})();
+</script>
+</body>
+</html>
