@@ -4,6 +4,7 @@ import { getKiosk, listResolvedExperiences } from "@/lib/db/repositories";
 import { validateExperienceCatalogue } from "@/lib/config/experiences";
 import type { PublicKioskConfig } from "@/lib/public-config";
 import type { Language } from "@/lib/i18n/messages";
+import { isDemoMode } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function KioskPage({
   const config: PublicKioskConfig = {
     kioskName: kiosk?.name ?? "Wild Frame AI",
     defaultLanguage: (kiosk?.configured_language ?? env.DEFAULT_LANGUAGE) as Language,
-    demoMode: env.DEMO_MODE,
+    demoMode: isDemoMode(),
     priceCents: experiences[0]?.priceCents ?? 599,
     currency: "usd",
     countdownSeconds: env.COUNTDOWN_SECONDS,

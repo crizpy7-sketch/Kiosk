@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { getEnv } from "@/lib/env";
 import { DemoCheckoutForm } from "@/app/demo/checkout/DemoCheckoutForm";
 import { formatPrice } from "@/lib/public-config";
+import { isDemoPayments } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +19,7 @@ export default async function DemoCheckoutPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const env = getEnv();
-  if (!env.DEMO_MODE) notFound();
+  if (!isDemoPayments()) notFound();
 
   const params = await searchParams;
   const read = (key: string): string => (typeof params[key] === "string" ? params[key] : "");

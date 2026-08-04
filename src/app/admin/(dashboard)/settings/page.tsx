@@ -3,6 +3,7 @@ import { getEnv } from "@/lib/env";
 import { getKiosk, getSetting, listResolvedExperiences } from "@/lib/db/repositories";
 import { SettingsForms } from "@/app/admin/(dashboard)/settings/SettingsForms";
 import { formatDateTime, Panel } from "@/components/admin/Ui";
+import { isDemoAi, isDemoPayments } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,8 @@ export default async function AdminSettingsPage() {
       <Panel title="Environment (read-only)">
         <dl className="grid gap-3 text-[14px] sm:grid-cols-2">
           <Row label="Kiosk ID" value={env.KIOSK_ID} />
-          <Row label="Mode" value={env.DEMO_MODE ? "DEMO — no real charges" : "LIVE"} />
+          <Row label="Payments" value={isDemoPayments() ? "DEMO — no real charges" : "LIVE — Stripe"} />
+          <Row label="AI" value={isDemoAi() ? "DEMO — simulated on-device" : "LIVE — Decart"} />
           <Row label="Storage driver" value={env.STORAGE_DRIVER} />
           <Row label="Max AI session" value={`${env.SESSION_MAX_SECONDS}s`} />
           <Row label="Countdown" value={`${env.COUNTDOWN_SECONDS}s`} />

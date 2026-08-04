@@ -296,3 +296,26 @@ frame rates on a CPU-only device. All three are invisible except in a rendered f
 `scripts/preview-styles.ts` and `scripts/make-fake-camera.ts` exist — Chromium's stock fake camera
 has no face in it, so without a real portrait piped in, the whole pipeline silently no-ops into the
 fallback and every run looks fine.
+
+---
+
+## 18. Payments and AI switch independently, and one combination is refused
+
+**Decision.** `DEMO_PAYMENTS` and `DEMO_AI` each default to `DEMO_MODE` but can be set on their own.
+Env validation rejects live payments with a simulated AI, unconditionally — in every environment,
+with no override flag.
+
+**Why split them.** The single flag made "see what the product actually produces" cost a Stripe
+account, a webhook endpoint and a test card, before the owner had any evidence the output was worth
+selling. Real AI with mocked checkout is the cheapest honest evaluation there is: a few seconds of
+Decart billing and nothing else.
+
+**Why refuse the mirror image.** Demo payments with real AI is a free preview. Real payments with
+demo AI is taking money for a watermarked mock. Those are not symmetric, so they do not get
+symmetric treatment: the first is a documented mode, the second fails to boot. It is refused
+unconditionally rather than gated behind a flag because there is no environment — not staging, not a
+trade show — where charging for a simulation is the intended behaviour, and a flag that permits it
+is a flag someone eventually sets.
+
+**Cost.** Two more env vars and a third boolean to reason about. Accepted: the alternative is an
+owner who cannot judge the product without first becoming a merchant.

@@ -261,7 +261,32 @@ npm run camera:fixture -- portrait.jpg face.y4m        # still → fake-camera c
 npm run preview:styles -- face.y4m style-previews      # → style-previews/*.png
 ```
 
-No Stripe charge, no Decart credits, no frame leaves the device. A green **DEMO — NO CHARGE** badge
+No Stripe charge, no Decart credits, no frame leaves the device.
+
+### Seeing real AI output for the price of a coffee
+
+The two adapters switch independently. To watch genuine Decart output without
+opening a Stripe account or exposing a webhook:
+
+```bash
+DEMO_MODE=true      # checkout stays mocked — nobody is charged
+DEMO_AI=false       # the transformation is real
+DECART_API_KEY=...  # from platform.decart.ai
+```
+
+Decart bills realtime editing per second, so one transformation costs
+`maxGenerationSeconds × the per-second rate` — at the shipped 15 seconds that is
+a few tens of cents, and new accounts start with free credits. Drop
+`maxGenerationSeconds` in `src/lib/config/experiences.ts` (minimum 5) while you
+are only checking that it works.
+
+The kiosk badge and the admin banner stay visible in this mode, and the admin
+settings page reports each adapter separately so nobody has to guess which half
+is live.
+
+**The reverse combination is refused and has no flag.** Live payments with a
+simulated AI would charge a customer for a watermarked mock, so env validation
+rejects it in every environment — see `tests/unit/env-modes.test.ts`. A green **DEMO — NO CHARGE** badge
 sits at the top of every kiosk screen so staff can never mistake it for live. Env validation refuses
 `DEMO_MODE` under `NODE_ENV=production` unless someone deliberately sets
 `ALLOW_DEMO_MODE_IN_PRODUCTION=true`.

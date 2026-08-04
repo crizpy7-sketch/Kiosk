@@ -6,6 +6,7 @@ import { clientKey, rateLimit } from "@/lib/security/rate-limit";
 import { getResolvedExperience } from "@/lib/db/repositories";
 import { createOrder } from "@/lib/orders/repository";
 import { LANGUAGES } from "@/lib/i18n/messages";
+import { isDemoMode } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,7 +45,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       experienceId: experience.id,
       language: parsed.data.language,
       priceCents: experience.priceCents,
-      demo: env.DEMO_MODE,
+      demo: isDemoMode(),
     });
 
     return ok({

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { getEnv } from "@/lib/env";
 import { fail, handleApiError, ok } from "@/lib/api/respond";
 import { signMockWebhook } from "@/lib/payments/mock.server";
 import { getPaymentProvider } from "@/lib/payments/index.server";
 import { applyPaymentEvent } from "@/lib/orders/fulfillment";
+import { isDemoPayments } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,8 +27,7 @@ const bodySchema = z.object({
  */
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    const env = getEnv();
-    if (!env.DEMO_MODE) return fail(404, "NOT_FOUND", "Not found.");
+    if (!isDemoPayments()) return fail(404, "NOT_FOUND", "Not found.");
 
     const parsed = bodySchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return fail(400, "INVALID_REQUEST", "That request wasn't valid.");

@@ -25,6 +25,19 @@ const serverEnvSchema = z
     DEMO_MODE: booleanish.default(false),
     ALLOW_DEMO_MODE_IN_PRODUCTION: booleanish.default(false),
 
+    /**
+     * Per-adapter overrides, each defaulting to DEMO_MODE.
+     *
+     * The combination that matters is `DEMO_PAYMENTS=true` with
+     * `DEMO_AI=false`: real Decart output, mock checkout. That is how you see
+     * what the product actually produces for the price of a few seconds of
+     * generation, without opening a Stripe account or exposing a webhook.
+     *
+     * The opposite combination is refused outright — see the refinement below.
+     */
+    DEMO_PAYMENTS: booleanish.optional(),
+    DEMO_AI: booleanish.optional(),
+
     DATABASE_URL: z.string().min(1),
 
     // Supabase is optional: only needed when STORAGE_DRIVER=supabase.
@@ -55,28 +68,44 @@ const serverEnvSchema = z
     CSP_EXTRA_CONNECT_SRC: z.string().optional(),
   })
   .superRefine((env, ctx) => {
+    const demoPayments = env.DEMO_PAYMENTS ?? env.DEMO_MODE;
+    const demoAi = env.DEMO_AI ?? env.DEMO_MODE;
+
     const demoAllowed = env.NODE_ENV !== "production" || env.ALLOW_DEMO_MODE_IN_PRODUCTION;
-    if (env.DEMO_MODE && !demoAllowed) {
+    if ((demoPayments || demoAi) && !demoAllowed) {
       ctx.addIssue({
         code: "custom",
         path: ["DEMO_MODE"],
         message:
-          "DEMO_MODE cannot be enabled in production. Set ALLOW_DEMO_MODE_IN_PRODUCTION=true only for a deliberate on-stage demo build.",
+          "Demo adapters cannot be enabled in production. Set ALLOW_DEMO_MODE_IN_PRODUCTION=true only for a deliberate on-stage demo build.",
       });
     }
 
-    // Live mode must have real credentials — an unconfigured kiosk that takes
-    // money is worse than one that refuses to start.
-    if (!env.DEMO_MODE) {
+    // Charging real money for a simulated photo is fraud, however it is reached.
+    // There is no flag to permit it and no environment where it is acceptable,
+    // so this is refused unconditionally rather than gated like the others.
+    if (!demoPayments && demoAi) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["DEMO_AI"],
+        message:
+          "Refusing to take real payments while the AI is simulated — that charges a customer for a watermarked mock. " +
+          "Set DEMO_AI=false with a DECART_API_KEY, or set DEMO_PAYMENTS=true so nobody is charged.",
+      });
+    }
+
+    // Live adapters must have real credentials — an unconfigured kiosk that
+    // takes money is worse than one that refuses to start.
+    if (!demoPayments) {
       if (!env.STRIPE_SECRET_KEY) {
-        ctx.addIssue({ code: "custom", path: ["STRIPE_SECRET_KEY"], message: "Required when DEMO_MODE is off." });
+        ctx.addIssue({ code: "custom", path: ["STRIPE_SECRET_KEY"], message: "Required when payments are live." });
       }
       if (!env.STRIPE_WEBHOOK_SECRET) {
-        ctx.addIssue({ code: "custom", path: ["STRIPE_WEBHOOK_SECRET"], message: "Required when DEMO_MODE is off." });
+        ctx.addIssue({ code: "custom", path: ["STRIPE_WEBHOOK_SECRET"], message: "Required when payments are live." });
       }
-      if (!env.DECART_API_KEY) {
-        ctx.addIssue({ code: "custom", path: ["DECART_API_KEY"], message: "Required when DEMO_MODE is off." });
-      }
+    }
+    if (!demoAi && !env.DECART_API_KEY) {
+      ctx.addIssue({ code: "custom", path: ["DECART_API_KEY"], message: "Required when the AI provider is live." });
     }
 
     if (env.STORAGE_DRIVER === "supabase") {
@@ -133,7 +162,24 @@ export function resetEnvCache(): void {
   cached = null;
 }
 
-/** True when payment and AI are simulated locally. */
+/**
+ * True when *either* adapter is simulated.
+ *
+ * This is what the kiosk badge and the admin banner read: any simulated
+ * adapter means the session is not a real sale, and staff must be told.
+ */
 export function isDemoMode(): boolean {
-  return getEnv().DEMO_MODE;
+  return isDemoPayments() || isDemoAi();
+}
+
+/** True when checkout is the local mock rather than Stripe. */
+export function isDemoPayments(): boolean {
+  const env = getEnv();
+  return env.DEMO_PAYMENTS ?? env.DEMO_MODE;
+}
+
+/** True when the transformation is simulated on-device rather than Decart. */
+export function isDemoAi(): boolean {
+  const env = getEnv();
+  return env.DEMO_AI ?? env.DEMO_MODE;
 }

@@ -4,6 +4,7 @@ import { requirePermission, hasPermission } from "@/lib/auth/session.server";
 import { getDashboardMetrics, getPilotProgress } from "@/lib/admin/metrics";
 import { listOrders } from "@/lib/orders/repository";
 import { EmptyState, formatDateTime, formatMoney, Panel, StatCard, StatusBadge } from "@/components/admin/Ui";
+import { isDemoAi, isDemoPayments } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,11 @@ export default async function AdminDashboard() {
         <div>
           <h1 className="text-[26px] font-bold text-white">Today</h1>
           <p className="mt-1 text-[14px] text-wf-dim">
-            {env.DEMO_MODE ? "Demo mode — no real charges are being taken." : "Live mode."}
+            {isDemoPayments()
+              ? isDemoAi()
+                ? "Demo mode — no real charges, simulated AI."
+                : "Demo checkout — no real charges, but the AI is live and billing."
+              : "Live mode."}
           </p>
         </div>
 
