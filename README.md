@@ -201,6 +201,10 @@ Integration tests need a database; they use `TEST_DATABASE_URL`, or derive `wild
 E2E builds the app and serves it in production mode with `DEMO_MODE=true`, then drives a real
 Chromium with a synthetic camera.
 
+CI (`.github/workflows/ci.yml`) runs all of the above on every pull request against a real
+PostgreSQL service, plus a canary-secret scan that fails the build if any credential value reaches
+a client-served asset.
+
 ---
 
 ## Demo mode
@@ -221,6 +225,11 @@ sits at the top of every kiosk screen so staff can never mistake it for live. En
 ## Deployment
 
 Any Node host that can run `next start`. Vercel + Supabase is the shortest path.
+
+> **This app cannot be served by GitHub Pages.** The repository previously hosted a static
+> `index.html` prototype there. This is a server-rendered application with a database, webhook
+> endpoints and secrets — it needs a Node runtime. Merging this removes the root `index.html`, so
+> the existing Pages site will 404 until Pages is disabled or pointed elsewhere.
 
 1. Provision Postgres (Supabase project or managed Postgres).
 2. Run `npm run db:migrate` and `npm run db:seed` against it.

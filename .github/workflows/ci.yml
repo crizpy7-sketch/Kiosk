@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Demo mode throughout: CI must never reach Stripe or spend Decart credits.
+  DEMO_MODE: "true"
+  ALLOW_DEMO_MODE_IN_PRODUCTION: "true"
+  APP_SECRET: ci-secret-that-is-definitely-long-enough-000000
+  APP_BASE_URL: http://127.0.0.1:3100
+  KIOSK_ID: kiosk-shia-baby-01
+  STORAGE_DRIVER: filesystem
+  DEFAULT_LANGUAGE: en
+
+jobs:
+  verify:
+    name: Typecheck, lint, test
+    runs-on: ubuntu-latest
+
+    # The order state machine's safety is row locking, so the suite runs against
+    # a real PostgreSQL rather than a stub that would pass while proving nothing.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wildframe_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck (app, tests and scripts)
+        run: npm run typecheck
+
+      - name: Lint
+        run: npx eslint .
+
+      - name: Unit and integration tests
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wildframe_test
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wildframe_test
+
+      - name: Production build
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wildframe_test
+
+      - name: Assert no secret reaches the client bundle
+        # The guarantee this project rests on, checked rather than assumed: build
+        # with canary values, then grep every client-served asset for them.
+        #
+        # The canaries deliberately do NOT carry real credential prefixes
+        # (sk_live_, whsec_). GitHub's own push protection rejects those on
+        # sight — correctly — even when the value is obvious nonsense. The
+        # prefix is irrelevant to what this step proves: that a value placed in
+        # a server-only variable never appears in a client-served asset.
+        env:
+          DATABASE_URL: postgresql://wfcanaryuser:WFCANARYDBPASS112233@db.invalid:5432/wf
+          APP_SECRET: WFCANARYAPPSECRET9f3a1c7e5b2d8046af1e93c6b4d70852
+          STRIPE_SECRET_KEY: WFCANARYSTRIPESECRET44556677889900
+          STRIPE_WEBHOOK_SECRET: WFCANARYWEBHOOKSECRET998877665544
+          DECART_API_KEY: WFCANARYDECARTKEYaabbccddeeff00112233
+          SUPABASE_SERVICE_ROLE_KEY: WFCANARYSUPASERVICEROLEzzyyxx99887766
+        run: |
+          rm -rf .next
+          npm run build
+          status=0
+          for value in \
+            WFCANARYAPPSECRET9f3a1c7e5b2d8046af1e93c6b4d70852 \
+            WFCANARYDBPASS112233 \
+            wfcanaryuser \
+            WFCANARYSTRIPESECRET44556677889900 \
+            WFCANARYWEBHOOKSECRET998877665544 \
+            WFCANARYDECARTKEYaabbccddeeff00112233 \
+            WFCANARYSUPASERVICEROLEzzyyxx99887766
+          do
+            if grep -rl "$value" .next/static/ 2>/dev/null | head -1 | grep -q .; then
+              echo "::error::Secret value leaked into a client-served asset: ${value:0:20}…"
+              status=1
+            fi
+          done
+          # Source maps would defeat the whole exercise.
+          if [ "$(find .next/static -name '*.map' | wc -l)" -ne 0 ]; then
+            echo "::error::Source maps are being served to the browser."
+            status=1
+          fi
+          [ $status -eq 0 ] && echo "No secret values in any client-served asset."
+          exit $status
+
+  e2e:
+    name: End-to-end (13-inch iPad portrait)
+    runs-on: ubuntu-latest
+    needs: verify
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wildframe_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wildframe_e2e
+      E2E_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/wildframe_e2e
+      E2E_OWNER_EMAIL: owner@wildframe.local
+      E2E_OWNER_PASSWORD: ci-owner-password-2026
+      SEED_OWNER_EMAIL: owner@wildframe.local
+      SEED_OWNER_PASSWORD: ci-owner-password-2026
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Prepare the database
+        run: |
+          npx tsx scripts/migrate.ts --reset
+          npx tsx scripts/seed.ts
+
+      - name: Run Playwright
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
