@@ -1,0 +1,51 @@
+{
+  "name": "wild-frame-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Wild Frame AI \u2014 supervised iPad selfie transformation kiosk. STEP IN. BECOME ANYTHING.",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:reset": "tsx scripts/migrate.ts --reset && tsx scripts/seed.ts",
+    "assets:generate": "tsx scripts/generate-preview-assets.ts",
+    "jobs:expire": "tsx scripts/expire-assets.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:all": "npm run typecheck && npm run test && npm run test:e2e"
+  },
+  "dependencies": {
+    "@decartai/sdk": "^0.1.17",
+    "next": "^15.5.4",
+    "pg": "^8.13.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "stripe": "^18.5.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@playwright/test": "^1.49.1",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.11.10",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.5.4",
+    "tailwindcss": "^4.1.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

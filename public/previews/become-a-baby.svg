@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500" role="img" aria-label="Become a Baby style preview">
+  <!--
+    Stylised placeholder preview. Deliberately cartoonish rather than
+    photoreal: this style is a fictional AI effect and must never read as a
+    prediction of a real child. See docs/DECISIONS.md.
+  -->
+  <defs>
+    <radialGradient id="bb-bg" cx="50%" cy="38%" r="80%">
+      <stop offset="0%" stop-color="#ffd9e8"/>
+      <stop offset="55%" stop-color="#ff9dc4"/>
+      <stop offset="100%" stop-color="#d1608e"/>
+    </radialGradient>
+    <linearGradient id="bb-bow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd0e2"/>
+      <stop offset="100%" stop-color="#ff8fbb"/>
+    </linearGradient>
+    <filter id="bb-soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <rect width="400" height="500" fill="url(#bb-bg)"/>
+  <ellipse cx="200" cy="260" rx="140" ry="160" fill="#ffffff" opacity="0.42" filter="url(#bb-soft)"/>
+
+  <!-- floating hearts -->
+  <g fill="#ff5c9a" opacity="0.75">
+    <path d="M78 132c-10-12-30-4-30 12 0 16 24 28 30 34 6-6 30-18 30-34 0-16-20-24-30-12z"/>
+    <path d="M326 168c-8-10-24-3-24 10 0 13 19 22 24 27 5-5 24-14 24-27 0-13-16-20-24-10z"/>
+    <path d="M60 336c-7-8-20-2-20 8 0 11 16 19 20 23 4-4 20-12 20-23 0-10-13-16-20-8z"/>
+  </g>
+
+  <!-- soft wispy hair -->
+  <path d="M200 108c-64 0-104 40-104 96 0 20 4 36 10 48-6-38 20-84 94-84s100 46 94 84c6-12 10-28 10-48 0-56-40-96-104-96z" fill="#c98f5e"/>
+
+  <!-- big round baby head -->
+  <ellipse cx="200" cy="264" rx="106" ry="102" fill="#ffe0cc"/>
+
+  <!-- headband + bow -->
+  <path d="M96 224q104-44 208 0l-6 22q-98-40-196 0z" fill="#ff8fbb"/>
+  <g>
+    <path d="M200 200c-16-30-64-34-64 4s48 34 64 4z" fill="url(#bb-bow)" stroke="#e0679a" stroke-width="3"/>
+    <path d="M200 200c16-30 64-34 64 4s-48 34-64 4z" fill="url(#bb-bow)" stroke="#e0679a" stroke-width="3"/>
+    <circle cx="200" cy="204" r="14" fill="#ffb8d4" stroke="#e0679a" stroke-width="3"/>
+  </g>
+
+  <!-- big bright eyes -->
+  <g>
+    <ellipse cx="166" cy="266" rx="21" ry="24" fill="#ffffff"/>
+    <ellipse cx="166" cy="268" rx="14" ry="16" fill="#5b3a1e"/>
+    <circle cx="161" cy="262" r="6" fill="#ffffff"/>
+    <ellipse cx="234" cy="266" rx="21" ry="24" fill="#ffffff"/>
+    <ellipse cx="234" cy="268" rx="14" ry="16" fill="#5b3a1e"/>
+    <circle cx="229" cy="262" r="6" fill="#ffffff"/>
+  </g>
+
+  <!-- round cheeks -->
+  <ellipse cx="142" cy="308" rx="20" ry="14" fill="#ffb0b8" opacity="0.75"/>
+  <ellipse cx="258" cy="308" rx="20" ry="14" fill="#ffb0b8" opacity="0.75"/>
+
+  <!-- little nose and joyful smile -->
+  <ellipse cx="200" cy="300" rx="9" ry="6" fill="#f2b79c"/>
+  <path d="M176 324q24 26 48 0-8 30-48 0z" fill="#c9506e"/>
+  <path d="M182 328q18 8 36 0-14 6-36 0z" fill="#ffffff"/>
+
+  <!-- knitted pastel outfit -->
+  <path d="M84 500c16-70 58-108 116-108s100 38 116 108z" fill="#ffc9dd"/>
+  <g stroke="#ff9dc4" stroke-width="4" fill="none" opacity="0.9">
+    <path d="M110 462q90 24 180 0M118 430q82 22 164 0"/>
+  </g>
+  <path d="M160 392q40 26 80 0l-6 30q-34 20-68 0z" fill="#ffe4ef"/>
+
+  <!-- sparkles -->
+  <g fill="#ffffff">
+    <path d="M320 250l7 19 19 7-19 7-7 19-7-19-19-7 19-7z"/>
+    <path d="M70 226l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+    <path d="M300 400l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+  </g>
+</svg>

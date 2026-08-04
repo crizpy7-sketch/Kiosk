@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500" role="img" aria-label="Royal Fantasy style preview">
+  <!-- Stylised placeholder preview. Illustrative of palette and mood only. -->
+  <defs>
+    <radialGradient id="rf-bg" cx="50%" cy="36%" r="82%">
+      <stop offset="0%" stop-color="#6b4a1c"/>
+      <stop offset="45%" stop-color="#33210c"/>
+      <stop offset="100%" stop-color="#0a0602"/>
+    </radialGradient>
+    <linearGradient id="rf-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe9a8"/>
+      <stop offset="45%" stop-color="#f2c14e"/>
+      <stop offset="100%" stop-color="#a87415"/>
+    </linearGradient>
+    <linearGradient id="rf-hair" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#5b3a1e"/>
+      <stop offset="100%" stop-color="#2a1709"/>
+    </linearGradient>
+    <filter id="rf-soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+
+  <rect width="400" height="500" fill="url(#rf-bg)"/>
+
+  <!-- candlelit castle hall: columns and arches, softly blurred -->
+  <g opacity="0.5" filter="url(#rf-soft)">
+    <rect x="18" y="150" width="42" height="350" fill="#5a4020"/>
+    <rect x="340" y="150" width="42" height="350" fill="#5a4020"/>
+    <path d="M18 150q21-40 42 0z" fill="#6b4d26"/>
+    <path d="M340 150q21-40 42 0z" fill="#6b4d26"/>
+    <path d="M120 500V250q80-80 160 0v250z" fill="#3a2a12"/>
+  </g>
+  <g fill="#ffd98a" opacity="0.75">
+    <circle cx="72" cy="196" r="9"/><circle cx="328" cy="196" r="9"/>
+    <circle cx="100" cy="300" r="6"/><circle cx="300" cy="300" r="6"/>
+  </g>
+
+  <!-- warm glow -->
+  <ellipse cx="200" cy="250" rx="120" ry="150" fill="#f2c14e" opacity="0.28" filter="url(#rf-soft)"/>
+
+  <!-- long hair -->
+  <path d="M200 96c-66 0-104 44-104 108 0 74-10 148-24 296h256c-14-148-24-222-24-296 0-64-38-108-104-108z" fill="url(#rf-hair)"/>
+
+  <!-- face -->
+  <ellipse cx="200" cy="252" rx="70" ry="86" fill="#f2cdad"/>
+  <path d="M132 234c6-48 34-78 68-78s62 30 68 78c-8-56-32-88-68-88s-60 32-68 88z" fill="url(#rf-hair)"/>
+
+  <!-- crown -->
+  <g>
+    <path d="M124 168l14-58 26 34 36-52 36 52 26-34 14 58z" fill="url(#rf-gold)" stroke="#8a5e10" stroke-width="3"/>
+    <rect x="124" y="164" width="152" height="20" rx="6" fill="url(#rf-gold)" stroke="#8a5e10" stroke-width="3"/>
+    <circle cx="138" cy="106" r="8" fill="#ffe9a8"/>
+    <circle cx="200" cy="94" r="9" fill="#ff5c8a"/>
+    <circle cx="262" cy="106" r="8" fill="#ffe9a8"/>
+    <circle cx="166" cy="174" r="6" fill="#7fd0ff"/>
+    <circle cx="200" cy="174" r="6" fill="#ff5c8a"/>
+    <circle cx="234" cy="174" r="6" fill="#7fd0ff"/>
+  </g>
+
+  <!-- eyes and poised expression -->
+  <g fill="#2a1709">
+    <ellipse cx="176" cy="248" rx="9" ry="7"/>
+    <ellipse cx="224" cy="248" rx="9" ry="7"/>
+  </g>
+  <path d="M164 234q12-8 24 0M212 234q12-8 24 0" stroke="#2a1709" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M186 294q14 10 28 0" stroke="#a8484f" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+  <!-- embroidered gown -->
+  <path d="M70 500c16-76 60-118 130-118s114 42 130 118z" fill="#241505"/>
+  <path d="M150 396q50 34 100 0l16 104H134z" fill="url(#rf-gold)" opacity="0.9"/>
+  <g stroke="#8a5e10" stroke-width="3" fill="none" opacity="0.8">
+    <path d="M164 424q36 20 72 0M158 456q42 22 84 0"/>
+  </g>
+
+  <!-- gold sparkles -->
+  <g fill="#ffe9a8">
+    <path d="M320 130l6 16 16 6-16 6-6 16-6-16-16-6 16-6z"/>
+    <path d="M76 340l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+  </g>
+</svg>
