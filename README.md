@@ -240,7 +240,26 @@ a client-served asset.
 
 - **Payment** → a local checkout page that posts an HMAC-signed webhook to the *real* webhook route,
   which verifies the signature and drives the *real* state machine.
-- **AI** → a canvas filter over the live camera, watermarked `DEMO MODE — SIMULATED AI`.
+- **AI** → an on-device simulation of the transformation, watermarked `DEMO MODE — SIMULATED AI`.
+
+The AI simulation is not a colour filter. MediaPipe segments the subject from their background and
+tracks their face, both in the browser, so each style replaces the background with its own scene,
+traces a halo around the subject, and anchors accessories — a crown, star sunglasses, a bow, slime —
+to the tracked landmarks. It is deliberately stylised rather than photoreal: a demo good enough to
+be mistaken for Lucy's output would mislead a customer about what they are buying.
+
+Models and the WASM runtime (~16 MB) are vendored under `public/` and load only when a demo session
+starts, so nothing is fetched from a CDN and the whole thing works offline. On a device that cannot
+run them the session falls back to the old colour grade rather than failing.
+
+To look at all four styles without a webcam — the stock fake camera in Chromium has no face in it,
+so it has to be fed a real portrait:
+
+```bash
+npm run dev                                            # in one terminal
+npm run camera:fixture -- portrait.jpg face.y4m        # still → fake-camera clip
+npm run preview:styles -- face.y4m style-previews      # → style-previews/*.png
+```
 
 No Stripe charge, no Decart credits, no frame leaves the device. A green **DEMO — NO CHARGE** badge
 sits at the top of every kiosk screen so staff can never mistake it for live. Env validation refuses

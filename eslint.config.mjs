@@ -21,6 +21,11 @@ const config = [
       "playwright-report/**",
       "test-results/**",
       "next-env.d.ts",
+      // Vendored MediaPipe runtime — a generated Emscripten bundle, not ours to
+      // lint or to fix.
+      "public/vision/**",
+      "style-previews/**",
+      "viewport-*/**",
     ],
   },
   {

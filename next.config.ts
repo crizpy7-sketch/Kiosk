@@ -20,7 +20,15 @@ function contentSecurityPolicy(): string {
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     // Next.js injects inline bootstrap scripts; 'unsafe-eval' is dev-only (React Refresh).
-    "script-src": ["'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : [])],
+    // 'wasm-unsafe-eval' lets demo mode instantiate MediaPipe's WebAssembly for
+    // on-device segmentation and face tracking. It permits WASM compilation only
+    // — it does NOT re-enable eval() for JavaScript.
+    "script-src": [
+      "'self'",
+      "'unsafe-inline'",
+      "'wasm-unsafe-eval'",
+      ...(isDev ? ["'unsafe-eval'"] : []),
+    ],
     "style-src": ["'self'", "'unsafe-inline'"],
     // blob: — transformed frames rendered from MediaStream captures.
     // data: — server-rendered QR codes are inlined as data URIs.

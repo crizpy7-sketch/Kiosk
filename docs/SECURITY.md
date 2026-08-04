@@ -262,6 +262,24 @@ not an iframe, so nothing needs framing permission.
 **development-only** (React Refresh). Extra Decart hosts can be added via `CSP_EXTRA_CONNECT_SRC`
 without loosening anything else.
 
+`'wasm-unsafe-eval'` is also on `script-src`, for demo mode's on-device vision (MediaPipe).
+Despite the name it permits **WebAssembly compilation only** — it does not re-enable `eval()`
+for JavaScript, and it is the narrowest directive that allows WASM at all.
+
+### The CSP catches MediaPipe phoning home
+
+MediaPipe attempts a telemetry `POST` to `https://odml.pa.googleapis.com/v1/log` on startup.
+`connect-src` does not list that host, so the request is refused by the browser and **no data
+leaves the device**; the failure is logged to the console and the library carries on normally.
+
+This is worth stating plainly because it is exactly the class of thing a privacy notice can be
+wrong about by accident: a third-party library added for a visual feature quietly opening a
+network call. The models themselves are vendored under `public/` and are never fetched from a
+CDN, so segmentation and face tracking run entirely offline — the only reason the telemetry call
+exists is that the library makes it unconditionally. If the CSP were ever loosened, this call
+would start succeeding; that is a reason to keep `connect-src` tight rather than a reason to
+allow it.
+
 ---
 
 ## Database

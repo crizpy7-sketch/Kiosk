@@ -254,3 +254,45 @@ testing the gate itself opt out.
 **Why.** `/api/admin/login` is rate limited to 8 attempts per five minutes per IP. A suite that signs
 in per test trips its own brute-force protection — which is the limiter working correctly. Signing in
 once also matches reality: staff sign in at the start of a shift.
+
+---
+
+## 17. Demo mode segments and tracks on-device instead of tinting
+
+**Decision.** The simulated provider runs MediaPipe's selfie segmenter and face landmarker in the
+browser, replaces the background with a procedural backdrop, traces a halo from the silhouette, and
+anchors per-style accessories to tracked landmarks. Models and the WASM runtime are vendored under
+`public/`.
+
+**Why.** Demo mode is how this product gets evaluated — by the owner, by staff, and by anyone
+deciding whether it is worth wiring up Stripe and Decart. A hue-rotate and a tint told you the
+plumbing worked and nothing about whether the product was worth selling. Segmentation is what makes
+a demo frame read as a transformation rather than a filter, and it costs no account, no credit, and
+no frame leaving the iPad.
+
+**Why not Claude, or another hosted model.** Claude has no image generation or image-to-image
+capability — it accepts images as input and returns text. There is no Anthropic equivalent to
+Decart's realtime video restyling, so "use Claude instead for now" is not available at any price.
+Every hosted alternative that *could* do it needs an account and a card, which is the exact barrier
+demo mode exists to remove.
+
+**Deliberately not photoreal.** The styles are stylised — a drawn crown, drawn slime, a procedural
+backdrop. A demo good enough to be mistaken for Lucy's output would mislead a customer about what
+they are buying, so the watermark stays on every frame and the look stays illustrative.
+
+**Cost.** ~16 MB of vendored models and WASM, loaded only when a demo session starts, and
+`'wasm-unsafe-eval'` on `script-src` (WASM compilation only — see `docs/SECURITY.md`).
+
+**Degrades rather than fails.** Models load in the background and the session renders the old colour
+grade until they arrive — permanently, on a device that cannot run them. `loadVision()` returns null
+instead of throwing.
+
+**Found by looking.** Three bugs survived a clean typecheck and would have survived any unit test:
+the halo was tinted with a full-frame `source-atop` fill, which repainted every opaque backdrop in
+the halo colour and flattened all four scenes to a wash; mirroring the landmarks inverted the sign
+of the eye-line angle, so `roll` came out near π and every face-anchored accessory drew upside down;
+and Royal ran four full-frame canvas blurs per frame, which alone dropped the loop below usable
+frame rates on a CPU-only device. All three are invisible except in a rendered frame, which is why
+`scripts/preview-styles.ts` and `scripts/make-fake-camera.ts` exist — Chromium's stock fake camera
+has no face in it, so without a real portrait piped in, the whole pipeline silently no-ops into the
+fallback and every run looks fine.

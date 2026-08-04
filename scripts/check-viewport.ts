@@ -120,6 +120,7 @@ async function main(): Promise<void> {
   await page.getByTestId("screen-camera").waitFor({ timeout: 20_000 });
   await page.waitForFunction(
     () => !document.querySelector<HTMLButtonElement>('[data-testid="camera-ready"]')?.disabled,
+    undefined,
     { timeout: 20_000 },
   );
   findings.push(await inspect(page, "camera", "camera-ready"));
@@ -129,6 +130,7 @@ async function main(): Promise<void> {
   await page.getByTestId("screen-generating").waitFor({ timeout: 20_000 });
   await page.waitForFunction(
     () => !document.querySelector<HTMLButtonElement>('[data-testid="generating-capture"]')?.disabled,
+    undefined,
     { timeout: 45_000 },
   );
   findings.push(await inspect(page, "transforming", "generating-capture"));

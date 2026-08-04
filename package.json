@@ -2,7 +2,7 @@
   "name": "wild-frame-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "Wild Frame AI \u2014 supervised iPad selfie transformation kiosk. STEP IN. BECOME ANYTHING.",
+  "description": "Wild Frame AI — supervised iPad selfie transformation kiosk. STEP IN. BECOME ANYTHING.",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
@@ -20,10 +20,13 @@
     "test:all": "npm run typecheck && npm run test && npm run test:e2e",
     "walkthrough": "tsx scripts/record-walkthrough.ts",
     "check:viewport": "tsx scripts/check-viewport.ts",
-    "previews:extract": "tsx scripts/extract-previews.ts"
+    "previews:extract": "tsx scripts/extract-previews.ts",
+    "camera:fixture": "tsx scripts/make-fake-camera.ts",
+    "preview:styles": "tsx scripts/preview-styles.ts"
   },
   "dependencies": {
     "@decartai/sdk": "^0.1.17",
+    "@mediapipe/tasks-vision": "^1.0.1",
     "next": "^15.5.4",
     "pg": "^8.13.1",
     "qrcode": "^1.5.4",
