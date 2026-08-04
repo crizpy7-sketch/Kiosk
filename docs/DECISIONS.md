@@ -152,17 +152,38 @@ carries someone's face.
 
 ---
 
-## 11. SVG preview art, clearly labelled as placeholder
+## 11. Style previews are the real portraits from the brand poster
 
-**Decision.** The four style cards use hand-authored SVG illustrations in `public/previews/`.
+**Decision.** The four style cards use photographic crops taken from the
+"CHOOSE YOUR AI STYLE" panel of the supplied brand poster, extracted by
+`scripts/extract-previews.ts`.
 
-**Why.** They are self-contained (no CDN, no CSP hole), sharp at any size, tiny, and they set the
-palette and energy the references establish. Each file carries a comment saying it is illustrative
-and should be replaced with a real consented sample once the pilot produces one.
+**Why.** The previews are the single most important image in the product — they
+are what a customer looks at when deciding to spend $5.99. They have to show
+what they are buying.
 
-**Honest limitation.** They are stylised, not photographic, so they under-sell the actual output.
-Replacing them with real transformations — with the subject's written consent — is the single
-highest-value visual improvement after launch.
+**What was there before, and why it was wrong.** The first version used
+hand-authored SVG illustrations. The stated reasons — self-contained, CSP-safe,
+sharp at any size — were all true and all beside the point. The real reason was
+that this environment has no image generation and no access to stock
+photography, and cartoon vector faces were what could be produced. Dressing a
+capability limit up as a design decision was the actual mistake; the cards
+looked like clip art next to a product whose entire promise is a photograph.
+
+The poster was sitting in the references the whole time, containing exactly
+these four styles as finished portraits.
+
+**How.** Chromium's canvas does the cropping — this environment has no image
+library and the bundled ffmpeg cannot decode PNG. Crop boxes are stored as
+fractions of the source, so re-exporting the poster at another resolution does
+not break them. Output is JPEG at 720×900: PNG made the same four images 4 MB,
+JPEG makes them 312 KB, and they are photographs.
+
+**Known limitation.** The source cards are only ~170px square in the poster, so
+these are upscaled and slightly soft at full card size. They should be replaced
+with real Lucy output as soon as the pilot produces a shot the subject consented
+to — rerun the same script against a new source, or drop files into
+`public/previews/`.
 
 ---
 

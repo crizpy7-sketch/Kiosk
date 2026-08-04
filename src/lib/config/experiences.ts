@@ -32,7 +32,12 @@ export const experienceSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/),
   name: z.object({ en: z.string().min(1), es: z.string().min(1) }),
   tagline: z.object({ en: z.string().min(1), es: z.string().min(1) }),
-  /** Path under /public. A short muted loop or a still — never a live camera. */
+  /**
+   * Path under /public. A still or a short muted loop — never a live camera.
+   * These ship as the four portraits from the brand poster; replace them with
+   * real Lucy output once the pilot has produced a shot the subject consented
+   * to (scripts/extract-previews.ts regenerates them from a poster).
+   */
   previewAsset: z.string().min(1),
   /** Optional style reference handed to the model via setImage(). */
   referenceAsset: z.string().nullable(),
@@ -75,7 +80,7 @@ export const EXPERIENCES: readonly Experience[] = [
     slug: "slime-star",
     name: { en: "Slime Star", es: "Estrella Slime" },
     tagline: { en: "Go wild.", es: "Sin límites." },
-    previewAsset: "/previews/slime-star.svg",
+    previewAsset: "/previews/slime-star.jpg",
     referenceAsset: null,
     prompt:
       "High-energy editorial pop-star portrait. Glossy hot-pink hair and neon slime-green highlights, " +
@@ -97,7 +102,7 @@ export const EXPERIENCES: readonly Experience[] = [
     slug: "anime-power-up",
     name: { en: "Anime Power-Up", es: "Poder Anime" },
     tagline: { en: "Level up.", es: "Sube de nivel." },
-    previewAsset: "/previews/anime-power-up.svg",
+    previewAsset: "/previews/anime-power-up.jpg",
     referenceAsset: null,
     prompt:
       "Heroic anime-inspired hero portrait. Crackling electric-blue energy aura and lightning arcs behind the " +
@@ -119,7 +124,7 @@ export const EXPERIENCES: readonly Experience[] = [
     slug: "royal-fantasy",
     name: { en: "Royal Fantasy", es: "Fantasía Real" },
     tagline: { en: "Rule your kingdom.", es: "Reina tu reino." },
-    previewAsset: "/previews/royal-fantasy.svg",
+    previewAsset: "/previews/royal-fantasy.jpg",
     referenceAsset: null,
     prompt:
       "Elegant cinematic royal portrait. Ornate golden crown, richly embroidered gold and ivory regal robes, " +
@@ -140,7 +145,7 @@ export const EXPERIENCES: readonly Experience[] = [
     slug: "become-a-baby",
     name: { en: "Become a Baby", es: "Conviértete en Bebé" },
     tagline: { en: "Tiny & adorable.", es: "Pequeño y adorable." },
-    previewAsset: "/previews/become-a-baby.svg",
+    previewAsset: "/previews/become-a-baby.jpg",
     referenceAsset: null,
     prompt:
       "Playful fictional baby-styled portrait. Transform the subject into a cute cartoonish baby version with " +
