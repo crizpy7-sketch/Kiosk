@@ -8,15 +8,21 @@
  *   npx tsx scripts/screenshot.ts [baseUrl] [outDir]
  */
 import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
 import { chromium, type Page } from "@playwright/test";
 
 // 13-inch iPad Pro, portrait, at CSS pixels.
 const VIEWPORT = { width: 1024, height: 1366 };
 
+/**
+ * JPEG, not PNG. These are photographs of a photographic product — the reveal
+ * and transform screens are camera frames — and PNG stores them at roughly ten
+ * times the size for no visible gain at review resolution.
+ */
 async function shoot(page: Page, dir: string, name: string): Promise<void> {
   await page.waitForTimeout(700);
-  await page.screenshot({ path: `${dir}/${name}.png` });
-  console.log(`  ✓ ${name}.png`);
+  await page.screenshot({ path: `${dir}/${name}.jpg`, quality: 88 });
+  console.log(`  ✓ ${name}.jpg`);
 }
 
 async function main(): Promise<void> {
@@ -34,8 +40,16 @@ async function main(): Promise<void> {
     args: [
       // Feed the camera a synthetic moving image so the camera, generation and
       // reveal screens can be captured without a physical webcam.
+      //
+      // FAKE_CAMERA_CLIP points at a y4m built by scripts/make-fake-camera.ts.
+      // Chromium's stock pattern contains no person, so without it the demo
+      // provider's segmentation and face tracking have nothing to work on and
+      // every AI screen captures the plain fallback grade instead.
       "--use-fake-ui-for-media-stream",
       "--use-fake-device-for-media-stream",
+      ...(process.env["FAKE_CAMERA_CLIP"]
+        ? [`--use-file-for-fake-video-capture=${resolve(process.env["FAKE_CAMERA_CLIP"])}`]
+        : []),
       "--autoplay-policy=no-user-gesture-required",
     ],
   });
