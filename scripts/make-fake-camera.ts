@@ -35,7 +35,7 @@ const MIME: Record<string, string> = {
 async function decodeToRgba(
   imagePath: string,
   crop: { x: number; y: number; w: number; h: number },
-): Promise<{ rgba: Buffer; natural: string }> {
+): Promise<{ rgba: Uint8Array; natural: string }> {
   const mime = MIME[extname(imagePath).toLowerCase()] ?? "image/png";
   const dataUri = `data:${mime};base64,${(await readFile(imagePath)).toString("base64")}`;
 
@@ -78,17 +78,17 @@ async function decodeToRgba(
       },
       { src: dataUri, box: crop, out: OUT },
     );
-    return { rgba: Buffer.from(result.rgba), natural: result.natural };
+    return { rgba: Uint8Array.from(result.rgba), natural: result.natural };
   } finally {
     await browser.close();
   }
 }
 
 /** BT.601, the colour space y4m's C420 tag implies. */
-function rgbaToI420(rgba: Buffer, width: number, height: number): Buffer {
+function rgbaToI420(rgba: Uint8Array, width: number, height: number): Uint8Array {
   const ySize = width * height;
   const cSize = (width / 2) * (height / 2);
-  const out = Buffer.alloc(ySize + cSize * 2);
+  const out = new Uint8Array(ySize + cSize * 2);
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
@@ -143,12 +143,21 @@ async function main(): Promise<void> {
   const { rgba, natural } = await decodeToRgba(imagePath, crop);
   const plane = rgbaToI420(rgba, OUT.width, OUT.height);
 
-  const chunks = [Buffer.from(`YUV4MPEG2 W${OUT.width} H${OUT.height} F24:1 Ip A1:1 C420jpeg\n`)];
+  const encoder = new TextEncoder();
+  const chunks: Uint8Array[] = [
+    encoder.encode(`YUV4MPEG2 W${OUT.width} H${OUT.height} F24:1 Ip A1:1 C420jpeg\n`),
+  ];
   for (let i = 0; i < FRAMES; i += 1) {
-    chunks.push(Buffer.from("FRAME\n"), plane);
+    chunks.push(encoder.encode("FRAME\n"), plane);
   }
 
-  const file = Buffer.concat(chunks);
+  const file = new Uint8Array(chunks.reduce((total, chunk) => total + chunk.byteLength, 0));
+  let offset = 0;
+  for (const chunk of chunks) {
+    file.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
   await writeFile(outPath, file);
   console.log(
     `${imagePath} (${natural}) → ${outPath}: ${OUT.width}×${OUT.height}, ` +
