@@ -139,7 +139,7 @@ export function StyleScreen({
         })}
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 max-[520px]:gap-2">
         <BackButton onClick={onBack} label={t("common.back")} />
         <TouchButton
           onClick={onContinue}

@@ -35,24 +35,30 @@ export function PurchaseScreen({
 
   return (
     <KioskScreen testId="screen-purchase" className="justify-between">
-      <div className="flex flex-1 flex-col items-center justify-center gap-8">
+      {/* Same pattern as the consent screen: the offer block flexes and scrolls
+          if it has to, so PAY NOW is never the thing pushed off the bottom. */}
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 overflow-y-auto max-[520px]:gap-4">
         <div className="text-center">
-          <h1 className="wf-display text-[40px] tracking-[0.06em] text-white">{t("purchase.title")}</h1>
-          <p className="wf-display mt-2 text-[23px] tracking-[0.18em] text-wf-dim">
+          <h1 className="wf-display text-[40px] tracking-[0.06em] text-white max-[520px]:text-[26px]">
+            {t("purchase.title")}
+          </h1>
+          <p className="wf-display mt-2 text-[23px] tracking-[0.18em] text-wf-dim max-[520px]:mt-1 max-[520px]:text-[15px]">
             {t("purchase.subtitle")}
           </p>
         </div>
 
         <p
-          className="wf-display text-[104px] leading-none text-wf-green drop-shadow-[0_0_36px_rgba(180,255,26,0.45)]"
+          className="wf-display text-[104px] leading-none text-wf-green drop-shadow-[0_0_36px_rgba(180,255,26,0.45)] max-[520px]:text-[62px]"
           data-testid="purchase-price"
         >
           {formatPrice(priceCents, currency)}
         </p>
 
-        <p className="text-[21px] text-wf-dim">{t("purchase.oneTime")}</p>
+        <p className="text-[21px] text-wf-dim max-[520px]:text-[15px]">{t("purchase.oneTime")}</p>
 
-        <div aria-hidden className="flex w-full max-w-[420px] flex-col gap-3">
+        {/* Decorative — a promise about the Stripe page that comes next. First
+            thing to go when the screen is too short to hold everything. */}
+        <div aria-hidden className="flex w-full max-w-[420px] flex-col gap-3 max-[520px]:gap-1.5 max-[700px]:hidden">
           <WalletMark label=" Pay" className="bg-white text-black" />
           <WalletMark label="G Pay" className="bg-white text-black" />
           <WalletMark label="Card" className="border border-white/25 bg-wf-surface-2 text-white" />
@@ -60,7 +66,7 @@ export function PurchaseScreen({
 
         {canceled && (
           <p
-            className="rounded-2xl border border-wf-pink/50 bg-wf-pink/10 px-6 py-4 text-center text-[19px] text-white"
+            className="rounded-2xl border border-wf-pink/50 bg-wf-pink/10 px-6 py-4 text-center text-[19px] text-white max-[520px]:px-4 max-[520px]:py-2.5 max-[520px]:text-[15px]"
             role="status"
             data-testid="purchase-canceled"
           >
@@ -89,7 +95,7 @@ export function PurchaseScreen({
           )}
         </TouchButton>
 
-        <p className="text-center text-[16px] text-wf-dim">{t("purchase.secure")}</p>
+        <p className="text-center text-[16px] text-wf-dim max-[520px]:text-[13px]">{t("purchase.secure")}</p>
 
         <BackButton onClick={onBack} label={t("common.back")} />
       </div>
@@ -100,7 +106,7 @@ export function PurchaseScreen({
 function WalletMark({ label, className }: { label: string; className: string }) {
   return (
     <div
-      className={`flex h-[58px] items-center justify-center rounded-xl text-[21px] font-semibold ${className}`}
+      className={`flex h-[58px] items-center justify-center rounded-xl text-[21px] font-semibold max-[520px]:h-[42px] max-[520px]:text-[16px] ${className}`}
     >
       {label}
     </div>

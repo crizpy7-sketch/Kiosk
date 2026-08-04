@@ -272,3 +272,80 @@ test.describe("kiosk chrome", () => {
     await expect(page.getByTestId("info-sheet")).toHaveCount(0);
   });
 });
+
+/**
+ * The kiosk ships on one screen — a 13-inch iPad Pro in portrait. But the owner
+ * and staff will inevitably open it on a phone to show someone, and a clipped
+ * or off-screen button reads as broken software regardless of which device it
+ * happens on. These guard the small end so the iPad layout can't be tuned into
+ * a phone regression later.
+ */
+test.describe("small screens stay usable", () => {
+  // iPhone SE — the shortest screen anyone is realistically holding.
+  test.use({ viewport: { width: 375, height: 667 }, isMobile: true });
+
+  test("24 — nothing scrolls sideways and every primary action stays on screen", async ({ page }) => {
+    const checkpoints: { name: string; primary: string }[] = [];
+
+    async function assertFits(name: string, primaryTestId: string): Promise<void> {
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${name} scrolls sideways`).toBeLessThanOrEqual(1);
+
+      const box = await page.getByTestId(primaryTestId).boundingBox();
+      expect(box, `${name} has no primary button`).not.toBeNull();
+      expect(box!.y + box!.height, `${name}: primary button is below the fold`).toBeLessThanOrEqual(667);
+
+      checkpoints.push({ name, primary: primaryTestId });
+    }
+
+    await page.goto("/kiosk");
+    await page.getByTestId("screen-attract").waitFor();
+    await assertFits("attract", "attract-start");
+
+    await page.getByTestId("attract-start").click();
+    await page.getByTestId("style-card-slime-star").click();
+    await assertFits("choose style", "style-continue");
+
+    await page.getByTestId("style-continue").click();
+    await page.getByTestId("screen-purchase").waitFor();
+    await assertFits("purchase", "purchase-pay");
+
+    await payInDemo(page);
+    await assertFits("consent", "consent-agree");
+
+    await consentAndOpenCamera(page);
+    await assertFits("camera", "camera-ready");
+
+    await generateAndCapture(page);
+    await assertFits("reveal", "reveal-accept");
+
+    await acceptAndGetQr(page);
+    await assertFits("delivery", "delivery-done");
+
+    // Every screen with a primary action was checked, not just the easy ones.
+    expect(checkpoints).toHaveLength(7);
+  });
+
+  test("25 — the customer's download page works at phone size", async ({ page }) => {
+    await startOrder(page, "slime-star");
+    await payInDemo(page);
+    await consentAndOpenCamera(page);
+    await generateAndCapture(page);
+
+    const responsePromise = page.waitForResponse(
+      (response) => response.url().includes("/capture") && response.status() === 200,
+    );
+    await page.getByTestId("reveal-accept").click();
+    const { downloadUrl } = (await (await responsePromise).json()) as { downloadUrl: string };
+
+    await page.goto(downloadUrl);
+    await expect(page.getByTestId("download-button")).toBeVisible();
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, "download page scrolls sideways").toBeLessThanOrEqual(1);
+  });
+});

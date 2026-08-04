@@ -37,6 +37,22 @@ payment terminal, no second computer. The software's job is to make that setup f
 
 Screens are captured in [`screenshots/`](screenshots/) at 1024×1366 (13" iPad Pro portrait).
 
+### Which screens are supported
+
+The kiosk is **designed for a 13-inch iPad Pro in portrait** — that is the product, and it is what
+the design is tuned for. It also stays usable down to an iPhone SE (375×667) so the owner can
+preview the flow on the phone in their pocket without setting up hardware. Phone sizes are a
+preview convenience, not a second product: the touch targets and type are sized for someone
+standing at a stand, not scrolling on a sofa.
+
+To check any viewport yourself — it walks the whole flow and reports horizontal overflow,
+off-screen buttons and undersized tap targets:
+
+```bash
+npm run check:viewport 375 667 iphone-se
+npm run check:viewport 1024 1366 ipad13
+```
+
 To regenerate them, or to record a video of the whole journey for someone who wants to see the
 product before setting up any accounts:
 

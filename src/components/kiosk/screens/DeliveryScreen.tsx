@@ -30,13 +30,15 @@ export function DeliveryScreen({
     <KioskScreen testId="screen-delivery" className="justify-between gap-6">
       <div className="flex flex-1 flex-col items-center justify-center gap-8">
         <div className="text-center">
-          <h1 className="wf-display text-[42px] leading-tight tracking-[0.04em] text-wf-green drop-shadow-[0_0_30px_rgba(180,255,26,0.45)]">
+          <h1 className="wf-display text-[42px] leading-tight tracking-[0.04em] text-wf-green drop-shadow-[0_0_30px_rgba(180,255,26,0.45)] max-[520px]:text-[30px]">
             {t("delivery.title")}
           </h1>
-          <p className="mt-4 text-[23px] text-white/85">{t("delivery.subtitle")}</p>
+          <p className="mt-4 text-[23px] text-white/85 max-[520px]:mt-2 max-[520px]:text-[17px]">
+            {t("delivery.subtitle")}
+          </p>
         </div>
 
-        <div className="rounded-[28px] bg-white p-6 shadow-[0_0_70px_-14px_rgba(255,255,255,0.4)]">
+        <div className="rounded-[28px] bg-white p-6 shadow-[0_0_70px_-14px_rgba(255,255,255,0.4)] max-[520px]:p-4">
           {qrDataUri ? (
             // eslint-disable-next-line @next/next/no-img-element -- a data: URI needs no optimisation pipeline
             <img
@@ -45,10 +47,11 @@ export function DeliveryScreen({
               width={440}
               height={440}
               data-testid="delivery-qr"
-              className="h-[440px] w-[440px]"
+              // Scales with the viewport so it never pushes DONE off screen.
+              className="h-[min(440px,62vw)] w-[min(440px,62vw)]"
             />
           ) : (
-            <div className="flex h-[440px] w-[440px] items-center justify-center">
+            <div className="flex h-[min(440px,62vw)] w-[min(440px,62vw)] items-center justify-center">
               <Spinner />
             </div>
           )}

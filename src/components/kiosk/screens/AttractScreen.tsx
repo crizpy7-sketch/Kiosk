@@ -48,11 +48,11 @@ export function AttractScreen({
       <div className="flex flex-1 flex-col items-center justify-center gap-10">
         <WildFrameLogo size="xl" className="wf-animate-rise" />
 
-        <h1 className="wf-display wf-animate-rise text-center text-[44px] leading-[1.08] tracking-[0.01em] text-white">
+        <h1 className="wf-display wf-animate-rise text-center text-[44px] leading-[1.08] tracking-[0.01em] text-white max-[520px]:text-[28px]">
           {t("brand.tagline")}
         </h1>
 
-        <p className="wf-display rounded-full border border-wf-green/40 px-7 py-3 text-center text-[22px] tracking-[0.14em] text-wf-green">
+        <p className="wf-display rounded-full border border-wf-green/40 px-7 py-3 text-center text-[22px] tracking-[0.14em] text-wf-green max-[520px]:px-4 max-[520px]:py-2 max-[520px]:text-[13px]">
           {t("attract.offer")}
         </p>
       </div>
@@ -91,7 +91,10 @@ export function AttractScreen({
 
         <PoweredByLucy label={t("brand.poweredBy")} className="pt-2" />
 
-        <nav className="flex w-full items-center justify-center gap-2 pt-1" aria-label="Kiosk information">
+        <nav
+          className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-0 pt-1"
+          aria-label="Kiosk information"
+        >
           <FooterLink
             active={language === "en"}
             onClick={() => onLanguageChange("en")}
@@ -148,7 +151,7 @@ function FooterLink({
       data-testid={testId}
       // 60px tall despite looking like small text: the tap target is generous
       // even though the label is not.
-      className={`wf-display min-h-[60px] rounded-lg px-4 text-[15px] tracking-[0.14em] transition-colors active:bg-white/10 ${
+      className={`wf-display min-h-[60px] rounded-lg px-4 text-[15px] tracking-[0.14em] transition-colors active:bg-white/10 max-[520px]:px-2.5 max-[520px]:text-[12px] max-[520px]:tracking-[0.08em] ${
         active ? "text-wf-green" : "text-wf-dim"
       }`}
     >
@@ -158,5 +161,7 @@ function FooterLink({
 }
 
 function Divider() {
-  return <span aria-hidden className="h-4 w-px bg-white/20" />;
+  // Hidden once the row wraps — a separator stranded at the end of a line reads
+  // as a rendering mistake rather than as punctuation.
+  return <span aria-hidden className="h-4 w-px bg-white/20 max-[520px]:hidden" />;
 }

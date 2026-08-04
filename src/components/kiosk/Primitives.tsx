@@ -65,7 +65,9 @@ export const TouchButton = forwardRef<HTMLButtonElement, TouchButtonProps>(funct
         "wf-display rounded-2xl transition-transform duration-100",
         "active:scale-[0.975] disabled:opacity-40 disabled:pointer-events-none",
         "flex items-center justify-center gap-3 text-center",
-        size === "lg" ? "min-h-[86px] px-10 text-[30px]" : "min-h-[64px] px-7 text-[21px]",
+        size === "lg"
+          ? "min-h-[86px] px-10 text-[30px] max-[520px]:min-h-[66px] max-[520px]:px-5 max-[520px]:text-[20px]"
+          : "min-h-[64px] px-7 text-[21px] max-[520px]:px-4 max-[520px]:text-[16px]",
         fullWidth ? "w-full" : "",
         VARIANTS[variant],
         className,
@@ -109,7 +111,7 @@ export function BackButton({ onClick, label }: { onClick: () => void; label: str
     <button
       type="button"
       onClick={onClick}
-      className="wf-display min-h-[64px] min-w-[140px] rounded-xl border border-white/20 px-6 text-[19px] text-wf-dim transition-transform active:scale-[0.97] active:bg-white/10"
+      className="wf-display min-h-[64px] min-w-[140px] shrink-0 rounded-xl border border-white/20 px-6 text-[19px] text-wf-dim transition-transform active:scale-[0.97] active:bg-white/10 max-[520px]:min-w-[92px] max-[520px]:px-3 max-[520px]:text-[15px]"
     >
       ← {label}
     </button>
