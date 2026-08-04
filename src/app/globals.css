@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+/* ─── Wild Frame AI design tokens ──────────────────────────────────────────
+   Deep black ground, hot pink primary, slime green secondary, white text.
+   Electric blue and gold appear only inside experience cards, never in chrome.
+   ────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-wf-black: #000000;
+  --color-wf-ink: #0a0a0c;
+  --color-wf-surface: #121216;
+  --color-wf-surface-2: #1c1c22;
+  --color-wf-border: #2a2a33;
+
+  --color-wf-pink: #ff1e8a;
+  --color-wf-pink-bright: #ff4da6;
+  --color-wf-pink-deep: #c9106a;
+
+  --color-wf-green: #b4ff1a;
+  --color-wf-green-deep: #7fc400;
+
+  --color-wf-blue: #2e8bff;
+  --color-wf-gold: #f2c14e;
+  --color-wf-baby: #ffb3d1;
+
+  --color-wf-white: #ffffff;
+  --color-wf-dim: #a8a8b8;
+
+  /* System stacks only. The kiosk must render identically with no network, and
+     a self-hosted webfont would be one more thing to 404 in front of a customer.
+     iPadOS resolves this to the heavy Helvetica Neue / SF cut. */
+  --font-display: "Helvetica Neue", "Arial Black", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+}
+
+/* The kiosk is intentionally always dark — it is a black slab in a bright shop,
+   not a document that should follow the reader's system theme. */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-wf-black);
+  color: var(--color-wf-white);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Kiosk-only chrome suppression ───────────────────────────────────────
+   Applied to <body> on kiosk routes only, so the admin and the customer's
+   phone download page keep normal text selection and scrolling. */
+body[data-kiosk="true"] {
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+body[data-kiosk="true"] * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wf-display {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* ─── Motion ──────────────────────────────────────────────────────────────
+   Transform/opacity only, so the compositor handles them and an iPad on a
+   power bank is not repainting the whole screen for a background glow. */
+@keyframes wf-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes wf-sheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+@keyframes wf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wf-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes wf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wf-animate-glow {
+  animation: wf-pulse-glow 3.2s ease-in-out infinite;
+}
+.wf-animate-sheen {
+  animation: wf-sheen 3.4s ease-in-out infinite;
+}
+.wf-animate-rise {
+  animation: wf-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.wf-animate-pop {
+  animation: wf-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.wf-animate-spin {
+  animation: wf-spin 1s linear infinite;
+}
+
+/* Attract-mode animation stops when the tab is hidden — no point burning
+   battery animating a screen nobody is looking at. */
+body[data-visible="false"] .wf-animate-glow,
+body[data-visible="false"] .wf-animate-sheen {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-animate-glow,
+  .wf-animate-sheen,
+  .wf-animate-rise,
+  .wf-animate-pop,
+  .wf-animate-spin {
+    animation: none;
+  }
+}
+
+/* ─── Focus ───────────────────────────────────────────────────────────────
+   Visible for keyboard/assistive navigation; touch taps don't trigger it. */
+:focus-visible {
+  outline: 3px solid var(--color-wf-green);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Mirrored selfie preview: customers expect to move left and see left. */
+.wf-mirror {
+  transform: scaleX(-1);
+}
