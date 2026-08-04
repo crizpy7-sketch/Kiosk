@@ -37,6 +37,17 @@ payment terminal, no second computer. The software's job is to make that setup f
 
 Screens are captured in [`screenshots/`](screenshots/) at 1024×1366 (13" iPad Pro portrait).
 
+To regenerate them, or to record a video of the whole journey for someone who wants to see the
+product before setting up any accounts:
+
+```bash
+npm run dev                              # in one terminal
+npx tsx scripts/screenshot.ts            # → screenshots/
+npm run walkthrough                      # → walkthrough/*.webm
+```
+
+Both drive the real app in demo mode, so what they capture is the product, not a mockup.
+
 ---
 
 ## Architecture at a glance

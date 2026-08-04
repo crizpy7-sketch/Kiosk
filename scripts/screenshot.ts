@@ -42,7 +42,9 @@ async function main(): Promise<void> {
 
   const context = await browser.newContext({
     viewport: VIEWPORT,
-    deviceScaleFactor: 2,
+    // 1x: these are read on a screen, not printed, and 2x quadruples the bytes
+    // for a preview nobody zooms into.
+    deviceScaleFactor: Number(process.env["WF_SCALE"] ?? 2),
     hasTouch: true,
     isMobile: false,
     permissions: ["camera"],
